@@ -68,6 +68,28 @@ class _CreateScreenState extends State<CreateScreen> {
     }
   }
 
+  Future<void> _saveDemoPlanner() async {
+    setState(() {
+      _busy = true;
+      _message = null;
+    });
+    try {
+      await _gallery.createApp(
+        name: 'Daily 3-Goal Planner',
+        description: 'Demo: three goals, one day.',
+        uiDefinition: StarterTemplates.threeGoalPlanner(),
+      );
+      if (!mounted) return;
+      setState(
+        () => _message = 'Demo planner created. Find it in Your Apps.',
+      );
+    } catch (_) {
+      if (mounted) setState(() => _message = 'Create failed. Try again.');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _save(String uiDefinition) async {
     final prompt = _promptController.text.trim();
     if (prompt.isEmpty) {
@@ -148,6 +170,19 @@ class _CreateScreenState extends State<CreateScreen> {
             label: const Text('Save this app'),
           ),
         ],
+        const SizedBox(height: 16),
+        const Divider(),
+        const SizedBox(height: 8),
+        Text(
+          'Instant demo',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        ElevatedButton.icon(
+          onPressed: _busy ? null : _saveDemoPlanner,
+          icon: const Icon(Icons.bolt_outlined),
+          label: const Text('One-tap demo: 3-Goal Planner'),
+        ),
         const SizedBox(height: 16),
         const Divider(),
         const SizedBox(height: 8),
