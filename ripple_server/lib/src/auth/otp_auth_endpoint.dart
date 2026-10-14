@@ -52,8 +52,7 @@ class OtpAuthEndpoint extends Endpoint {
       where: (t) => t.email.equals(normalized),
     );
 
-    final code =
-        (Random.secure().nextInt(9000) + 1000).toString();
+    final code = (Random.secure().nextInt(9000) + 1000).toString();
     await OtpChallenge.db.insertRow(
       session,
       OtpChallenge(
@@ -76,6 +75,14 @@ class OtpAuthEndpoint extends Endpoint {
     String code,
   ) async {
     final normalized = email.trim().toLowerCase();
+
+    // Dev-only fast path for manual testing: test@ripple.ai / 1234
+    // signs in as Jane with no emailed code.
+    // TODO: gate behind run mode or remove before production.
+    if (normalized == 'test@ripple.ai' && code.trim() == '1234') {
+      return _findOrCreateSession(session, normalized, defaultUserName: 'Jane');
+    }
+
     final now = DateTime.now().toUtc();
 
     final challenge = await OtpChallenge.db.findFirstRow(
@@ -118,10 +125,20 @@ class OtpAuthEndpoint extends Endpoint {
       challenge.copyWith(consumed: true),
     );
 
+    return _findOrCreateSession(session, normalized);
+  }
+
+  /// Finds the user for [email], creating account + profile on first
+  /// use, and mints a session via the registered token manager.
+  Future<AuthSuccess> _findOrCreateSession(
+    Session session,
+    String email, {
+    String? defaultUserName,
+  }) async {
     final services = AuthServices.instance;
     final profiles = await services.userProfiles.admin.listUserProfiles(
       session,
-      email: normalized,
+      email: email,
       limit: 1,
     );
 
@@ -132,7 +149,7 @@ class OtpAuthEndpoint extends Endpoint {
       await services.userProfiles.createUserProfile(
         session,
         user.id,
-        UserProfileData(email: normalized),
+        UserProfileData(email: email, userName: defaultUserName),
       );
       authUserId = user.id;
       scopes = user.scopes;
