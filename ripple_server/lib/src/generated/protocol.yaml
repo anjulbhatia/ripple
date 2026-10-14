@@ -1,0 +1,29 @@
+appData:
+  - putData:
+  - getData:
+  - getAllData:
+  - deleteData:
+app:
+  - createApp:
+  - listMyApps:
+  - getApp:
+  - updateApp:
+  - deleteApp:
+  - listPublished:
+share:
+  - createMagicLink:
+  - openWithMagicLink:
+  - revokeMagicLink:
+emailIdp:
+  - login:
+  - startRegistration:
+  - verifyRegistrationCode:
+  - finishRegistration:
+  - startPasswordReset:
+  - verifyPasswordResetCode:
+  - finishPasswordReset:
+  - hasAccount:
+jwtRefresh:
+  - refreshAccessToken:
+greeting:
+  - hello:

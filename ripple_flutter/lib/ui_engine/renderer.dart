@@ -1,0 +1,168 @@
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+
+import 'component_catalog.dart';
+import 'ui_schema.dart';
+
+/// Interprets declarative UI JSON into real Flutter widgets.
+///
+/// v1: renders layout/text/buttons + TextField/Toggle backed by an
+/// in-memory value store. Server persistence wires in via runner feature.
+class UiRenderer extends StatefulWidget {
+  const UiRenderer({
+    super.key,
+    required this.definitionJson,
+    this.values = const {},
+  });
+
+  final String definitionJson;
+  final Map<String, Object?> values;
+
+  @override
+  State<UiRenderer> createState() => _UiRendererState();
+}
+
+class _UiRendererState extends State<UiRenderer> {
+  late Map<String, Object?> _values;
+
+  @override
+  void initState() {
+    super.initState();
+    _values = Map.of(widget.values);
+  }
+
+  void _handleAction(Map<String, Object?>? action) {
+    final name = action?[UiActionKeys.action] as String?;
+    final key = action?[UiActionKeys.key] as String?;
+    if (name == null || key == null) return;
+    setState(() {
+      switch (name) {
+        case UiActions.increment:
+          final inc = (action?[UiActionKeys.value] as num?)?.toInt() ?? 1;
+          _values[key] = ((_values[key] as num?)?.toInt() ?? 0) + inc;
+        case UiActions.toggle:
+          _values[key] = !((_values[key] as bool?) ?? false);
+        case UiActions.setValue:
+          _values[key] = action?[UiActionKeys.value];
+        case UiActions.noop:
+          break;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    late final Map<String, Object?> root;
+    try {
+      root = jsonDecode(widget.definitionJson) as Map<String, Object?>;
+    } catch (_) {
+      return const Center(child: Text('Invalid app definition'));
+    }
+    return _buildNode(context, root);
+  }
+
+  Widget _buildNode(BuildContext context, Map<String, Object?> node) {
+    final type = node[UiNodeKeys.type] as String?;
+    if (type == null || !ComponentCatalog.isSupported(type)) {
+      return Text('Unsupported component: $type');
+    }
+    final children =
+        (node[UiNodeKeys.children] as List?)
+            ?.whereType<Map<String, Object?>>()
+            .toList() ??
+        const <Map<String, Object?>>[];
+    switch (type) {
+      case 'Column':
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [for (final c in children) _buildNode(context, c)],
+        );
+      case 'Row':
+        return Row(
+          children: [
+            for (final c in children) Expanded(child: _buildNode(context, c)),
+          ],
+        );
+      case 'Text':
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Text('${node[UiNodeKeys.text] ?? ''}'),
+        );
+      case 'Button':
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: ElevatedButton(
+            onPressed: () => _handleAction(
+              (node[UiNodeKeys.onClick] as Map?)?.cast<String, Object?>(),
+            ),
+            child: Text('${node[UiNodeKeys.label] ?? 'Button'}'),
+          ),
+        );
+      case 'Card':
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [for (final c in children) _buildNode(context, c)],
+            ),
+          ),
+        );
+      case 'List':
+        return Column(
+          children: [for (final c in children) _buildNode(context, c)],
+        );
+      case 'ListItem':
+        return ListTile(title: Text('${node[UiNodeKeys.text] ?? ''}'));
+      case 'TextField':
+        final key = node[UiActionKeys.key] as String? ?? 'field';
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: TextField(
+            decoration: InputDecoration(
+              labelText: '${node[UiNodeKeys.label] ?? key}',
+            ),
+            onChanged: (v) => setState(() => _values[key] = v),
+          ),
+        );
+      case 'Toggle':
+        final key = node[UiActionKeys.key] as String? ?? 'toggle';
+        return SwitchListTile(
+          title: Text('${node[UiNodeKeys.label] ?? key}'),
+          value: (_values[key] as bool?) ?? false,
+          onChanged: (v) => setState(() => _values[key] = v),
+        );
+      case 'Image':
+        final url = node['url'] as String?;
+        if (url == null || url.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Image.network(
+            url,
+            errorBuilder: (_, _, _) => const Text('Image failed to load'),
+          ),
+        );
+      case 'Spacer':
+        return const SizedBox(height: 12);
+      case 'Divider':
+        return const Divider();
+      case 'BottomSheet':
+        return OutlinedButton(
+          onPressed: () => showModalBottomSheet<void>(
+            context: context,
+            builder: (_) => Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [for (final c in children) _buildNode(context, c)],
+              ),
+            ),
+          ),
+          child: Text('${node[UiNodeKeys.label] ?? 'Open'}'),
+        );
+    }
+    return Text('Unsupported component: $type');
+  }
+}
