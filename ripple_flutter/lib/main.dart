@@ -1,22 +1,15 @@
 import 'package:flutter/material.dart';
 
 import 'client.dart';
-import 'screens/greetings_screen.dart';
+import 'features/auth/auth_gate.dart';
+import 'features/auth/splash_screen.dart';
+import 'shell/app_shell.dart';
+import 'theme/ripple_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeClient();
   runApp(const MyApp());
-}
-
-/// Builds a theme for the given [brightness].
-ThemeData _buildTheme(Brightness brightness) {
-  return ThemeData(
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.blue,
-      brightness: brightness,
-    ),
-  );
 }
 
 class MyApp extends StatelessWidget {
@@ -25,37 +18,37 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Serverpod Demo',
-      theme: _buildTheme(Brightness.light),
-      darkTheme: _buildTheme(Brightness.dark),
+      title: 'Ripple',
+      theme: RippleTheme.light,
+      darkTheme: RippleTheme.dark,
       themeMode: ThemeMode.system,
-      home: const MyHomePage(title: 'Serverpod Example'),
+      home: const _Boot(),
     );
   }
 }
 
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({super.key, required this.title});
+/// Brief brand splash, then auth gate, then the app shell.
+class _Boot extends StatefulWidget {
+  const _Boot();
 
-  final String title;
+  @override
+  State<_Boot> createState() => _BootState();
+}
+
+class _BootState extends State<_Boot> {
+  bool _ready = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) setState(() => _ready = true);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: const GreetingsScreen(),
-      // To test authentication in this example app, uncomment the line below
-      // and comment out the line above. This wraps the GreetingsScreen with a
-      // SignInScreen, which automatically shows a sign-in UI when the user is
-      // not authenticated and displays the GreetingsScreen once they sign in.
-      //
-      // body: SignInScreen(
-      //   child: GreetingsScreen(
-      //     onSignOut: () async {
-      //       await client.auth.signOutDevice();
-      //     },
-      //   ),
-      // ),
-    );
+    if (!_ready) return const SplashScreen();
+    return const AuthGate(child: AppShell());
   }
 }
