@@ -72,11 +72,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 24),
         Text('Settings', style: Theme.of(context).textTheme.titleMedium),
-        SwitchListTile(
-          title: const Text('Appearance follows system'),
-          subtitle: const Text('Light / dark via system theme'),
-          value: true,
-          onChanged: null,
+        ListTile(
+          leading: Icon(
+            Theme.of(context).brightness == Brightness.dark
+                ? Icons.dark_mode_outlined
+                : Icons.light_mode_outlined,
+          ),
+          title: const Text('Appearance'),
+          subtitle: const Text('Follows your system theme'),
         ),
         const Divider(),
         ListTile(

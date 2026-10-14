@@ -29,6 +29,23 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _gallery = GalleryService();
   final _promptController = TextEditingController();
+  late Future<List<AppDefinition>> _appsFuture;
+  late Future<List<AppDefinition>> _publishedFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _appsFuture = _gallery.listApps();
+    _publishedFuture = _gallery.listPublished();
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _appsFuture = _gallery.listApps();
+      _publishedFuture = _gallery.listPublished();
+    });
+    await Future.wait([_appsFuture, _publishedFuture]);
+  }
 
   @override
   void dispose() {
@@ -39,65 +56,74 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final name = widget.displayName.isEmpty ? 'there' : widget.displayName;
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-      children: [
-        Text(
-          'Hi $name,',
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-        const SizedBox(height: 16),
-        SectionHeader(title: 'Your Apps', onViewAll: widget.onViewAllApps),
-        const SizedBox(height: 8),
-        FutureBuilder<List<AppDefinition>>(
-          future: _gallery.listApps(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Padding(
-                padding: EdgeInsets.all(24),
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
-            if (snapshot.hasError) {
-              return const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('Could not load apps. Start the server?'),
-              );
-            }
-            final apps = snapshot.data ?? const [];
-            if (apps.isEmpty) {
-              return _emptyState(
-                context,
-                'No apps yet. Describe one below to create it.',
-              );
-            }
-            return _grid(apps.take(10).toList());
-          },
-        ),
-        const SizedBox(height: 20),
-        SectionHeader(
-          title: 'Explore Apps',
-          onViewAll: widget.onViewAllExplore,
-        ),
-        const SizedBox(height: 8),
-        FutureBuilder<List<AppDefinition>>(
-          future: _gallery.listPublished(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Padding(
-                padding: EdgeInsets.all(24),
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
-            if (snapshot.hasError || (snapshot.data ?? []).isEmpty) {
-              return _emptyState(context, 'Nothing published yet.');
-            }
-            return _grid(snapshot.data!.take(10).toList());
-          },
-        ),
-        const SizedBox(height: 24),
-        _promptBar(context),
-      ],
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        children: [
+          Text(
+            'Hi $name,',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: 16),
+          SectionHeader(title: 'Your Apps', onViewAll: widget.onViewAllApps),
+          const SizedBox(height: 8),
+          FutureBuilder<List<AppDefinition>>(
+            future: _appsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (snapshot.hasError) {
+                return const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('Could not load apps. Start the server?'),
+                );
+              }
+              final apps = snapshot.data ?? const [];
+              if (apps.isEmpty) {
+                return _emptyState(
+                  context,
+                  'No apps yet. Describe one below to create it.',
+                );
+              }
+              return _grid(apps.take(10).toList());
+            },
+          ),
+          const SizedBox(height: 20),
+          SectionHeader(
+            title: 'Explore Apps',
+            onViewAll: widget.onViewAllExplore,
+          ),
+          const SizedBox(height: 8),
+          FutureBuilder<List<AppDefinition>>(
+            future: _publishedFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (snapshot.hasError) {
+                return _emptyState(
+                  context,
+                  'Could not load Explore. Start the server?',
+                );
+              }
+              if ((snapshot.data ?? []).isEmpty) {
+                return _emptyState(context, 'Nothing published yet.');
+              }
+              return _grid(snapshot.data!.take(10).toList());
+            },
+          ),
+          const SizedBox(height: 24),
+          _promptBar(context),
+        ],
+      ),
     );
   }
 
