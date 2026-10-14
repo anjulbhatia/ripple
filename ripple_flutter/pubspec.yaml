@@ -46,6 +46,16 @@ dev_dependencies:
   # Drop icon.png (user-provided, root assets/) then run:
   # dart run flutter_launcher_icons
   flutter_launcher_icons: ^0.14.0
+  # Branded native launch screen (olive bg + splash.png).
+  # Regenerate with: dart run flutter_native_splash:create
+  flutter_native_splash: ^2.4.0
+
+flutter_native_splash:
+  color: "#052326"
+  image: assets/images/splash.png
+  android: true
+  ios: true
+  web: true
 
 flutter_launcher_icons:
   android: true
