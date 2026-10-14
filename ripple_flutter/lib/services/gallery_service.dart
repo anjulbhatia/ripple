@@ -6,6 +6,10 @@ import '../client.dart';
 class GalleryService {
   Future<List<AppDefinition>> listApps() => client.app.listMyApps();
 
+  Future<List<AppDefinition>> listPublished() => client.app.listPublished();
+
+  Future<AppDefinition?> getApp(int appId) => client.app.getApp(appId);
+
   Future<AppDefinition> createApp({
     required String name,
     String? description,
@@ -14,6 +18,20 @@ class GalleryService {
     name: name,
     description: description,
     uiDefinition: uiDefinition,
+  );
+
+  Future<AppDefinition> updateApp({
+    required int appId,
+    String? name,
+    String? description,
+    String? uiDefinition,
+    bool? isPublished,
+  }) => client.app.updateApp(
+    appId: appId,
+    name: name,
+    description: description,
+    uiDefinition: uiDefinition,
+    isPublished: isPublished,
   );
 
   Future<void> deleteApp(int appId) => client.app.deleteApp(appId);
