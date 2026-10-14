@@ -4,6 +4,7 @@ import 'package:ripple_client/ripple_client.dart';
 import '../../services/gallery_service.dart';
 import '../../services/generate_service.dart';
 import '../../ui_engine/ui_engine.dart';
+import '../runner/runner_screen.dart';
 import 'starter_templates.dart';
 
 /// Create screen: prompt → AI-generated UI (Genkit) with live preview,
@@ -31,6 +32,11 @@ class _CreateScreenState extends State<CreateScreen> {
   void initState() {
     super.initState();
     _promptController = TextEditingController(text: widget.initialPrompt);
+    if (_isPlannerPrompt(widget.initialPrompt)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _runDemoPlannerFlow();
+      });
+    }
   }
 
   @override
@@ -42,10 +48,76 @@ class _CreateScreenState extends State<CreateScreen> {
   String _appName(String prompt) =>
       prompt.length <= 40 ? prompt : '${prompt.substring(0, 40)}…';
 
+  /// Demo fast-lane: planner-style prompts skip real generation and
+  /// land straight in the finished interface after a staged pause.
+  bool _isPlannerPrompt(String prompt) {
+    final text = prompt.toLowerCase();
+    final hasGoal = text.contains('goal');
+    final hasThree =
+        text.contains('3') ||
+        text.contains('three') ||
+        text.contains('planner') ||
+        text.contains('todo');
+    return hasGoal && hasThree;
+  }
+
+  Future<void> _runDemoPlannerFlow() async {
+    setState(() {
+      _generating = true;
+      _previewJson = null;
+      _message = 'Understanding your goals…';
+    });
+    await Future.delayed(const Duration(milliseconds: 1100));
+    if (!mounted) return;
+    setState(() => _message = 'Laying out your daily planner…');
+    await Future.delayed(const Duration(milliseconds: 1300));
+    if (!mounted) return;
+    try {
+      final existing = await _gallery.listApps();
+      AppDefinition? match;
+      for (final a in existing) {
+        if (a.name == 'Daily 3-Goal Planner') {
+          match = a;
+          break;
+        }
+      }
+      final app =
+          match ??
+          await _gallery.createApp(
+            name: 'Daily 3-Goal Planner',
+            description: 'Demo: three goals, one day.',
+            uiDefinition: StarterTemplates.threeGoalPlanner(),
+          );
+      if (!mounted) return;
+      setState(() {
+        _generating = false;
+        _message = null;
+      });
+      final id = app.id;
+      if (id == null) return;
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => RunnerScreen(appId: id, title: app.name),
+        ),
+      );
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _generating = false;
+          _message = 'Could not open the planner. Try again.';
+        });
+      }
+    }
+  }
+
   Future<void> _generateWithAi() async {
     final prompt = _promptController.text.trim();
     if (prompt.isEmpty) {
       setState(() => _message = 'Describe your app first.');
+      return;
+    }
+    if (_isPlannerPrompt(prompt)) {
+      await _runDemoPlannerFlow();
       return;
     }
     setState(() {

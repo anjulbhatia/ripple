@@ -25,8 +25,11 @@ open later → simple data storage. Everything else secondary.
 - [x] Builder/Create screen: prompt + starter templates (counter, habit
       tracker, notes) → catalog-valid JSON → `createApp`.
 - [x] Runner screen: renders saved UI via `UiRenderer`.
-- [ ] Runner data: load/persist `AppData` through `AppDataService`
+- [x] Runner data: load/persist `AppData` through `AppDataService`
       (wire action writes to server).
+- [x] Demo fast-lane: planner-style prompts ("make a 3 goals daily
+      planner") fake a staged generation, then open the finished
+      planner directly (reuse or create).
 - [ ] Sign-in wiring: wrap home in `SignInScreen` so gallery scopes per
       user (endpoints already stamp `ownerUserId` when authenticated).
 

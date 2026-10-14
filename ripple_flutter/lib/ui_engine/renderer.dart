@@ -7,17 +7,25 @@ import 'ui_schema.dart';
 
 /// Interprets declarative UI JSON into real Flutter widgets.
 ///
-/// v1: renders layout/text/buttons + TextField/Toggle backed by an
-/// in-memory value store. Server persistence wires in via runner feature.
+/// Values live in-memory and, when [loadValues]/[saveValue] are provided
+/// (runner passes Serverpod-backed ones), persist across sessions.
 class UiRenderer extends StatefulWidget {
   const UiRenderer({
     super.key,
     required this.definitionJson,
     this.values = const {},
+    this.loadValues,
+    this.saveValue,
   });
 
   final String definitionJson;
   final Map<String, Object?> values;
+
+  /// Loads persisted values (key -> raw value). Called once on init.
+  final Future<Map<String, Object?>> Function()? loadValues;
+
+  /// Persists one value change. Fire-and-forget from the UI.
+  final Future<void> Function(String key, Object? value)? saveValue;
 
   @override
   State<UiRenderer> createState() => _UiRendererState();
@@ -25,30 +33,63 @@ class UiRenderer extends StatefulWidget {
 
 class _UiRendererState extends State<UiRenderer> {
   late Map<String, Object?> _values;
+  final _controllers = <String, TextEditingController>{};
 
   @override
   void initState() {
     super.initState();
     _values = Map.of(widget.values);
+    final load = widget.loadValues;
+    if (load != null) {
+      load().then((stored) {
+        if (!mounted) return;
+        setState(() => _values.addAll(stored));
+        for (final entry in stored.entries) {
+          final controller = _controllers[entry.key];
+          final text = '${entry.value ?? ''}';
+          if (controller != null &&
+              controller.text.isEmpty &&
+              text.isNotEmpty) {
+            controller.text = text;
+          }
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final c in _controllers.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  TextEditingController _controllerFor(String key) => _controllers.putIfAbsent(
+    key,
+    () => TextEditingController(text: '${_values[key] ?? ''}'),
+  );
+
+  void _setAndPersist(String key, Object? value) {
+    setState(() => _values[key] = value);
+    widget.saveValue?.call(key, value);
   }
 
   void _handleAction(Map<String, Object?>? action) {
     final name = action?[UiActionKeys.action] as String?;
     final key = action?[UiActionKeys.key] as String?;
     if (name == null || key == null) return;
-    setState(() {
-      switch (name) {
-        case UiActions.increment:
-          final inc = (action?[UiActionKeys.value] as num?)?.toInt() ?? 1;
-          _values[key] = ((_values[key] as num?)?.toInt() ?? 0) + inc;
-        case UiActions.toggle:
-          _values[key] = !((_values[key] as bool?) ?? false);
-        case UiActions.setValue:
-          _values[key] = action?[UiActionKeys.value];
-        case UiActions.noop:
-          break;
-      }
-    });
+    switch (name) {
+      case UiActions.increment:
+        final inc = (action?[UiActionKeys.value] as num?)?.toInt() ?? 1;
+        _setAndPersist(key, ((_values[key] as num?)?.toInt() ?? 0) + inc);
+      case UiActions.toggle:
+        _setAndPersist(key, !((_values[key] as bool?) ?? false));
+      case UiActions.setValue:
+        _setAndPersist(key, action?[UiActionKeys.value]);
+      case UiActions.noop:
+        break;
+    }
   }
 
   @override
@@ -153,10 +194,11 @@ class _UiRendererState extends State<UiRenderer> {
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: TextField(
+            controller: _controllerFor(key),
             decoration: InputDecoration(
               labelText: '${node[UiNodeKeys.label] ?? key}',
             ),
-            onChanged: (v) => setState(() => _values[key] = v),
+            onSubmitted: (v) => _setAndPersist(key, v),
           ),
         );
       case 'Toggle':
@@ -164,7 +206,7 @@ class _UiRendererState extends State<UiRenderer> {
         return SwitchListTile(
           title: Text('${node[UiNodeKeys.label] ?? key}'),
           value: (_values[key] as bool?) ?? false,
-          onChanged: (v) => setState(() => _values[key] = v),
+          onChanged: (v) => _setAndPersist(key, v),
         );
       case 'Image':
         final url = node['url'] as String?;

@@ -25,6 +25,13 @@ Personal apps only — no realtime/chat/multiplayer. See `PROJECT.md`.
 - Mid-write codegen hazard: watch-mode codegen can fail on partially
   written files (stale barrels) — rerun `serverpod generate` to heal.
 - `dart test` cannot run while server holds the embedded DB (expected).
+- Runner persists values: `UiRenderer` takes loadValues/saveValue;
+  `RunnerScreen` wires `AppDataService` (bool/num/string codec).
+  TextField persists on submit, Toggle/actions instantly.
+- Demo fast-lane in `CreateScreen`: goal+3/planner/todo prompts run a
+  ~2.4s staged fake ("Understanding…" → "Laying out…"), reuse or create
+  Daily 3-Goal Planner, push `RunnerScreen` directly. Auto-triggers
+  when arriving with a matching home prompt.
 - Assets landed: `assets/splash.png` + `assets/icon.png` copied to
   `ripple_flutter/assets/images/`; `dart run flutter_launcher_icons`
   generated Android + iOS icons. Splash screen shows real image.
