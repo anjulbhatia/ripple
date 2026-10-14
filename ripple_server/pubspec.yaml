@@ -10,6 +10,8 @@ resolution: workspace
 
 dependencies:
   crypto: ^3.0.0
+  genkit: 1.0.0
+  genkit_google_genai: 1.0.0
   serverpod: 4.0.4
   serverpod_auth_idp_server: 4.0.4
   serverpod_cloud_storage: 4.0.4

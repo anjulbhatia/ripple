@@ -28,5 +28,7 @@ jwtRefresh:
 otpAuth:
   - requestCode:
   - verifyCode:
+generate:
+  - generateUi:
 greeting:
   - hello:

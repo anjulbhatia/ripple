@@ -168,6 +168,8 @@ class TestEndpoints {
 
   late final _OtpAuthEndpoint otpAuth;
 
+  late final _GenerateEndpoint generate;
+
   late final _GreetingEndpoint greeting;
 }
 
@@ -199,6 +201,10 @@ class _InternalTestEndpoints extends TestEndpoints
       serializationManager,
     );
     otpAuth = _OtpAuthEndpoint(
+      endpoints,
+      serializationManager,
+    );
+    generate = _GenerateEndpoint(
       endpoints,
       serializationManager,
     );
@@ -1064,6 +1070,48 @@ class _OtpAuthEndpoint {
                   _localCallContext.arguments,
                 )
                 as _ida.Future<_iacs.AuthSuccess>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+}
+
+class _GenerateEndpoint {
+  _GenerateEndpoint(
+    this._endpointDispatch,
+    this._serializationManager,
+  );
+
+  final _is.EndpointDispatch _endpointDispatch;
+
+  final _is.SerializationManager _serializationManager;
+
+  _ida.Future<String> generateUi(
+    _ist.TestSessionBuilder sessionBuilder,
+    String prompt,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'generate',
+            method: 'generateUi',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'generate',
+          methodName: 'generateUi',
+          parameters: _ist.testObjectToJson({'prompt': prompt}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<String>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();

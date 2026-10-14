@@ -458,6 +458,30 @@ class EndpointOtpAuth extends _isc.EndpointRef {
   );
 }
 
+/// AI screen generation via Genkit (Gemini).
+///
+/// `generateUi` turns a natural-language prompt into catalog-valid
+/// declarative UI JSON ready for `UiRenderer` and `AppDefinition`.
+/// Needs `geminiApiKey` in `config/passwords.yaml` (gitignored) —
+/// get one at https://aistudio.google.com. Without it the endpoint
+/// throws [GenerateException] with [GenerateReason.notConfigured].
+/// {@category Endpoint}
+class EndpointGenerate extends _isc.EndpointRef {
+  EndpointGenerate(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'generate';
+
+  /// Generates declarative UI JSON for [prompt]. Validates output
+  /// against the component catalog, retrying once on violation.
+  _ida.Future<String> generateUi(String prompt) =>
+      caller.callServerEndpoint<String>(
+        'generate',
+        'generateUi',
+        {'prompt': prompt},
+      );
+}
+
 /// This is an example endpoint that returns a greeting message through
 /// its [hello] method.
 /// {@category Endpoint}
@@ -520,6 +544,7 @@ class Client extends _isc.ServerpodClientShared {
     emailIdp = EndpointEmailIdp(this);
     jwtRefresh = EndpointJwtRefresh(this);
     otpAuth = EndpointOtpAuth(this);
+    generate = EndpointGenerate(this);
     greeting = EndpointGreeting(this);
     modules = Modules(this);
   }
@@ -536,6 +561,8 @@ class Client extends _isc.ServerpodClientShared {
 
   late final EndpointOtpAuth otpAuth;
 
+  late final EndpointGenerate generate;
+
   late final EndpointGreeting greeting;
 
   late final Modules modules;
@@ -548,6 +575,7 @@ class Client extends _isc.ServerpodClientShared {
     'emailIdp': emailIdp,
     'jwtRefresh': jwtRefresh,
     'otpAuth': otpAuth,
+    'generate': generate,
     'greeting': greeting,
   };
 

@@ -21,6 +21,7 @@ import '../apps/share_endpoint.dart' as _izifs5t1;
 import '../auth/email_idp_endpoint.dart' as _iuc1hd5t;
 import '../auth/jwt_refresh_endpoint.dart' as _inwq3ztq;
 import '../auth/otp_auth_endpoint.dart' as _i1ohi0jl;
+import '../generate/generate_endpoint.dart' as _i2vk9l0m;
 import '../greetings/greeting_endpoint.dart' as _il624ik7;
 
 class Endpoints extends _is.EndpointDispatch {
@@ -61,6 +62,12 @@ class Endpoints extends _is.EndpointDispatch {
         ..initialize(
           server,
           'otpAuth',
+          null,
+        ),
+      'generate': _i2vk9l0m.GenerateEndpoint()
+        ..initialize(
+          server,
+          'generate',
           null,
         ),
       'greeting': _il624ik7.GreetingEndpoint()
@@ -632,6 +639,31 @@ class Endpoints extends _is.EndpointDispatch {
                     session,
                     params['email'],
                     params['code'],
+                  ),
+        ),
+      },
+    );
+    connectors['generate'] = _is.EndpointConnector(
+      name: 'generate',
+      endpoint: endpoints['generate']!,
+      methodConnectors: {
+        'generateUi': _is.MethodConnector(
+          name: 'generateUi',
+          params: {
+            'prompt': _is.ParameterDescription(
+              name: 'prompt',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['generate'] as _i2vk9l0m.GenerateEndpoint)
+                  .generateUi(
+                    session,
+                    params['prompt'],
                   ),
         ),
       },
