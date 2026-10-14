@@ -1,0 +1,5 @@
+# Typed OTP failure sent to the client (thrown, never persisted).
+exception: OtpAuthException
+fields:
+  message: String
+  reason: OtpAuthReason

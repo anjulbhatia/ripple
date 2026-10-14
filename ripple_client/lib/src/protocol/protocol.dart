@@ -22,10 +22,16 @@ import 'package:serverpod_client/serverpod_client.dart' as _isc;
 import 'apps/app_data.dart' as _iochtstf;
 import 'apps/app_definition.dart' as _i3dhxabv;
 import 'apps/magic_link.dart' as _iavfvqqo;
+import 'auth/otp_auth_exception.dart' as _ijxnwu0n;
+import 'auth/otp_auth_reason.dart' as _imlz7ush;
+import 'auth/otp_challenge.dart' as _izfoet1f;
 import 'greetings/greeting.dart' as _izw8z7ou;
 export 'apps/app_data.dart';
 export 'apps/app_definition.dart';
 export 'apps/magic_link.dart';
+export 'auth/otp_auth_exception.dart';
+export 'auth/otp_auth_reason.dart';
+export 'auth/otp_challenge.dart';
 export 'greetings/greeting.dart';
 export 'client.dart';
 
@@ -72,6 +78,15 @@ class Protocol extends _isc.SerializationManager {
     if (t == _iavfvqqo.MagicLink) {
       return _iavfvqqo.MagicLink.fromJson(data) as T;
     }
+    if (t == _ijxnwu0n.OtpAuthException) {
+      return _ijxnwu0n.OtpAuthException.fromJson(data) as T;
+    }
+    if (t == _imlz7ush.OtpAuthReason) {
+      return _imlz7ush.OtpAuthReason.fromJson(data) as T;
+    }
+    if (t == _izfoet1f.OtpChallenge) {
+      return _izfoet1f.OtpChallenge.fromJson(data) as T;
+    }
     if (t == _izw8z7ou.Greeting) {
       return _izw8z7ou.Greeting.fromJson(data) as T;
     }
@@ -84,6 +99,17 @@ class Protocol extends _isc.SerializationManager {
     }
     if (t == _isc.getType<_iavfvqqo.MagicLink?>()) {
       return (data != null ? _iavfvqqo.MagicLink.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_ijxnwu0n.OtpAuthException?>()) {
+      return (data != null ? _ijxnwu0n.OtpAuthException.fromJson(data) : null)
+          as T;
+    }
+    if (t == _isc.getType<_imlz7ush.OtpAuthReason?>()) {
+      return (data != null ? _imlz7ush.OtpAuthReason.fromJson(data) : null)
+          as T;
+    }
+    if (t == _isc.getType<_izfoet1f.OtpChallenge?>()) {
+      return (data != null ? _izfoet1f.OtpChallenge.fromJson(data) : null) as T;
     }
     if (t == _isc.getType<_izw8z7ou.Greeting?>()) {
       return (data != null ? _izw8z7ou.Greeting.fromJson(data) : null) as T;
@@ -114,6 +140,9 @@ class Protocol extends _isc.SerializationManager {
       _iochtstf.AppData => 'AppData',
       _i3dhxabv.AppDefinition => 'AppDefinition',
       _iavfvqqo.MagicLink => 'MagicLink',
+      _ijxnwu0n.OtpAuthException => 'OtpAuthException',
+      _imlz7ush.OtpAuthReason => 'OtpAuthReason',
+      _izfoet1f.OtpChallenge => 'OtpChallenge',
       _izw8z7ou.Greeting => 'Greeting',
       _ => null,
     };
@@ -135,6 +164,12 @@ class Protocol extends _isc.SerializationManager {
         return 'AppDefinition';
       case _iavfvqqo.MagicLink():
         return 'MagicLink';
+      case _ijxnwu0n.OtpAuthException():
+        return 'OtpAuthException';
+      case _imlz7ush.OtpAuthReason():
+        return 'OtpAuthReason';
+      case _izfoet1f.OtpChallenge():
+        return 'OtpChallenge';
       case _izw8z7ou.Greeting():
         return 'Greeting';
     }
@@ -167,6 +202,15 @@ class Protocol extends _isc.SerializationManager {
     }
     if (dataClassName == 'MagicLink') {
       return deserialize<_iavfvqqo.MagicLink>(data['data']);
+    }
+    if (dataClassName == 'OtpAuthException') {
+      return deserialize<_ijxnwu0n.OtpAuthException>(data['data']);
+    }
+    if (dataClassName == 'OtpAuthReason') {
+      return deserialize<_imlz7ush.OtpAuthReason>(data['data']);
+    }
+    if (dataClassName == 'OtpChallenge') {
+      return deserialize<_izfoet1f.OtpChallenge>(data['data']);
     }
     if (dataClassName == 'Greeting') {
       return deserialize<_izw8z7ou.Greeting>(data['data']);

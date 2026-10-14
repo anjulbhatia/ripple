@@ -413,6 +413,51 @@ class EndpointJwtRefresh extends _iacc.EndpointRefreshJwtTokens {
       );
 }
 
+/// Passwordless email sign-in with a 4-digit OTP code.
+///
+/// Serverpod's email provider only supports password login, so this
+/// endpoint implements the project's no-password flow on top of the
+/// standard auth services: successful verification mints a real
+/// Serverpod session via the registered token manager.
+///
+/// Flow: `requestCode(email)` -> user reads code -> `verifyCode(email,
+/// code)` returns [AuthSuccess]; client stores it with
+/// `client.auth.updateSignedInUser(...)`.
+///
+/// Code delivery is currently the server log (same as Serverpod's own
+/// dev behavior for verification codes). Plug a real email sender into
+/// [_deliverCode] before production.
+/// {@category Endpoint}
+class EndpointOtpAuth extends _isc.EndpointRef {
+  EndpointOtpAuth(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'otpAuth';
+
+  /// Issues a fresh 4-digit code for [email], invalidating older ones.
+  _ida.Future<void> requestCode(String email) =>
+      caller.callServerEndpoint<void>(
+        'otpAuth',
+        'requestCode',
+        {'email': email},
+      );
+
+  /// Verifies [code] and signs the user in (creating the account on
+  /// first use). Returns a session the client must store via
+  /// `client.auth.updateSignedInUser`.
+  _ida.Future<_iacc.AuthSuccess> verifyCode(
+    String email,
+    String code,
+  ) => caller.callServerEndpoint<_iacc.AuthSuccess>(
+    'otpAuth',
+    'verifyCode',
+    {
+      'email': email,
+      'code': code,
+    },
+  );
+}
+
 /// This is an example endpoint that returns a greeting message through
 /// its [hello] method.
 /// {@category Endpoint}
@@ -474,6 +519,7 @@ class Client extends _isc.ServerpodClientShared {
     share = EndpointShare(this);
     emailIdp = EndpointEmailIdp(this);
     jwtRefresh = EndpointJwtRefresh(this);
+    otpAuth = EndpointOtpAuth(this);
     greeting = EndpointGreeting(this);
     modules = Modules(this);
   }
@@ -488,6 +534,8 @@ class Client extends _isc.ServerpodClientShared {
 
   late final EndpointJwtRefresh jwtRefresh;
 
+  late final EndpointOtpAuth otpAuth;
+
   late final EndpointGreeting greeting;
 
   late final Modules modules;
@@ -499,6 +547,7 @@ class Client extends _isc.ServerpodClientShared {
     'share': share,
     'emailIdp': emailIdp,
     'jwtRefresh': jwtRefresh,
+    'otpAuth': otpAuth,
     'greeting': greeting,
   };
 

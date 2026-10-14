@@ -20,6 +20,7 @@ import '../apps/app_endpoint.dart' as _i6a3eul5;
 import '../apps/share_endpoint.dart' as _izifs5t1;
 import '../auth/email_idp_endpoint.dart' as _iuc1hd5t;
 import '../auth/jwt_refresh_endpoint.dart' as _inwq3ztq;
+import '../auth/otp_auth_endpoint.dart' as _i1ohi0jl;
 import '../greetings/greeting_endpoint.dart' as _il624ik7;
 
 class Endpoints extends _is.EndpointDispatch {
@@ -54,6 +55,12 @@ class Endpoints extends _is.EndpointDispatch {
         ..initialize(
           server,
           'jwtRefresh',
+          null,
+        ),
+      'otpAuth': _i1ohi0jl.OtpAuthEndpoint()
+        ..initialize(
+          server,
+          'otpAuth',
           null,
         ),
       'greeting': _il624ik7.GreetingEndpoint()
@@ -576,6 +583,56 @@ class Endpoints extends _is.EndpointDispatch {
                         session,
                         refreshToken: params['refreshToken'],
                       ),
+        ),
+      },
+    );
+    connectors['otpAuth'] = _is.EndpointConnector(
+      name: 'otpAuth',
+      endpoint: endpoints['otpAuth']!,
+      methodConnectors: {
+        'requestCode': _is.MethodConnector(
+          name: 'requestCode',
+          params: {
+            'email': _is.ParameterDescription(
+              name: 'email',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['otpAuth'] as _i1ohi0jl.OtpAuthEndpoint)
+                  .requestCode(
+                    session,
+                    params['email'],
+                  ),
+        ),
+        'verifyCode': _is.MethodConnector(
+          name: 'verifyCode',
+          params: {
+            'email': _is.ParameterDescription(
+              name: 'email',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+            'code': _is.ParameterDescription(
+              name: 'code',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['otpAuth'] as _i1ohi0jl.OtpAuthEndpoint)
+                  .verifyCode(
+                    session,
+                    params['email'],
+                    params['code'],
+                  ),
         ),
       },
     );

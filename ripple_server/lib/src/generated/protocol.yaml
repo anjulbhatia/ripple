@@ -25,5 +25,8 @@ emailIdp:
   - hasAccount:
 jwtRefresh:
   - refreshAccessToken:
+otpAuth:
+  - requestCode:
+  - verifyCode:
 greeting:
   - hello:

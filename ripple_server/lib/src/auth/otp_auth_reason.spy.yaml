@@ -1,0 +1,7 @@
+# Machine-readable reason for an OTP auth failure.
+enum: OtpAuthReason
+values:
+  - invalidEmail
+  - invalidCode
+  - expired
+  - tooManyAttempts
