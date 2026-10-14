@@ -6,7 +6,25 @@ only paints). Agent outputs declarative UI JSON against a fixed catalog;
 Flutter host renders it; Serverpod owns auth/gallery/data/magic links.
 Personal apps only — no realtime/chat/multiplayer. See `PROJECT.md`.
 
-## Done this session (cont. 2 — main interface)
+## Done this session (cont. 3 — Genkit + demo polish)
+- Genkit in-process in Serverpod server (`genkit` + `genkit_google_genai`
+  deps): `GenerateEndpoint.generateUi` (Gemini `gemini-flash-latest`,
+  catalog system prompt, server validation + 1 repair retry). No tables,
+  no migration. Key via `session.passwords['geminiApiKey']` — user must
+  add to `config/passwords.yaml` + restart server.
+- Renderer honors style maps (Text fontSize/weight/color, Button
+  background); prompt updated to emit them.
+- Dev test user: test@ripple.ai / 1234 → Jane (TODO: gate/remove prod).
+- Live state: server + web app running under user's `serverpod start`;
+  profile/gallery/published calls succeeding; one `generateUi` failure
+  seen (no key yet — expected).
+- Splash/icon root causes: web icons were Flutter defaults (fixed +
+  branded manifest); no native splash existed (added
+  flutter_native_splash); new assets need FULL rebuild (hot reload
+  skips them). Android/iOS launcher icons were fine all along.
+- Mid-write codegen hazard: watch-mode codegen can fail on partially
+  written files (stale barrels) — rerun `serverpod generate` to heal.
+- `dart test` cannot run while server holds the embedded DB (expected).
 - Assets landed: `assets/splash.png` + `assets/icon.png` copied to
   `ripple_flutter/assets/images/`; `dart run flutter_launcher_icons`
   generated Android + iOS icons. Splash screen shows real image.

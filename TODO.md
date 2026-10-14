@@ -16,7 +16,11 @@ open later → simple data storage. Everything else secondary.
 - [ ] Start server: user runs `serverpod start` (applies migrations
       `20261014135210853`, `20261014202717080`). Agent must NOT start
       server itself.
-- [ ] End-to-end test: sign in → create → open → data persists.
+- [ ] AI key: add `geminiApiKey: 'KEY'` (from aistudio.google.com)
+      under `development:` in `ripple_server/config/passwords.yaml`
+      (gitignored), then restart server (passwords load at boot).
+      Until then Generate with AI reports "not configured".
+- [ ] Demo pass: test@ripple.ai / 1234 → create via AI → open → publish.
 - [x] Gallery screen: list via `GalleryService`, open runner, delete.
 - [x] Builder/Create screen: prompt + starter templates (counter, habit
       tracker, notes) → catalog-valid JSON → `createApp`.
