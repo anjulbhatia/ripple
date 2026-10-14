@@ -4,15 +4,25 @@ Core flow first: Describe → generate declarative UI → save to gallery →
 open later → simple data storage. Everything else secondary.
 
 ## P0 — core flow (next)
-- [ ] Start server: user runs `serverpod start` (applies migration
-      `20261014135210853`). Agent must NOT start server itself.
-- [ ] Gallery screen: list `AppDefinition` via `GalleryService`, open
-      runner, delete, entry point to builder.
-- [ ] Builder screen: prompt box + MVP template generator (counter, habit
-      tracker, notes) emitting catalog-valid JSON → `createApp`.
-- [ ] Runner screen: `UiRenderer` + load/persist `AppData` through
-      `AppDataService` (wire action writes to server).
-- [ ] End-to-end test: describe → save → reopen → data persists.
+- [x] Assets landed: `splash.png`/`icon.png` copied to
+      `ripple_flutter/assets/images/`, launcher icons generated.
+- [x] Main interface shell: drawer (Create, chats, apps, profile+settings),
+      top bar (drawer left, avatar right → profile), no bottom nav.
+- [x] Home: `Hi {{name}}` greeting, Your Apps 2x5 grid + View All,
+      Explore 2x5 grid + View All, create prompt bar → Create screen.
+- [x] Screens: Explore (published), Profile+settings (sign out),
+      Create (prompt + starter template → saved app), Runner (renders
+      saved declarative UI).
+- [ ] Start server: user runs `serverpod start` (applies migrations
+      `20261014135210853`, `20261014202717080`). Agent must NOT start
+      server itself.
+- [ ] End-to-end test: sign in → create → open → data persists.
+- [x] Gallery screen: list via `GalleryService`, open runner, delete.
+- [x] Builder/Create screen: prompt + starter templates (counter, habit
+      tracker, notes) → catalog-valid JSON → `createApp`.
+- [x] Runner screen: renders saved UI via `UiRenderer`.
+- [ ] Runner data: load/persist `AppData` through `AppDataService`
+      (wire action writes to server).
 - [ ] Sign-in wiring: wrap home in `SignInScreen` so gallery scopes per
       user (endpoints already stamp `ownerUserId` when authenticated).
 
@@ -28,6 +38,15 @@ open later → simple data storage. Everything else secondary.
 - [ ] Realtime/chat/multiplayer — OUT OF SCOPE, do not build.
 
 ## Done
+- [x] Passwordless auth: `OtpChallenge` model + `OtpAuthEndpoint`
+      (request 4-digit code, 10-min expiry, verify → real Serverpod
+      session). Migration `20261014202717080`. Flutter: `OtpScreen`,
+      `AuthGate`, `AuthService`, wired as app home behind splash.
+- [x] Theme: lime `#D3FB52` primary, olive `#052326` ink/accent,
+      neutral scale, Oswald display + Roboto body, Material icons.
+- [x] Asset prep: `ripple_flutter/assets/images/` + pubspec entry,
+      `flutter_launcher_icons` config, splash with fallback mark.
+      Pending only the actual `splash.png`/`icon.png` files from user.
 - [x] Confirm `serverpod create ripple` scaffold (server/client/flutter).
 - [x] Flutter folders: `ui_engine/`, `features/{gallery,builder,runner,
       sharing}/`, `services/`.

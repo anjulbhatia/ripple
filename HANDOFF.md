@@ -6,7 +6,56 @@ only paints). Agent outputs declarative UI JSON against a fixed catalog;
 Flutter host renders it; Serverpod owns auth/gallery/data/magic links.
 Personal apps only — no realtime/chat/multiplayer. See `PROJECT.md`.
 
-## Done this session
+## Done this session (cont. 2 — main interface)
+- Assets landed: `assets/splash.png` + `assets/icon.png` copied to
+  `ripple_flutter/assets/images/`; `dart run flutter_launcher_icons`
+  generated Android + iOS icons. Splash screen shows real image.
+- Shell (`lib/shell/app_shell.dart`): AppBar (drawer left, avatar right
+  → profile), `AppDrawer` (Create New App button, Your chats → create,
+  Your apps → gallery, Profile and settings at end), tab switching for
+  home/explore/create/gallery/profile. No bottom nav per spec.
+- Home (`features/home/`): `Hi {{name}}` (profile userName/fullName/email
+  handle via `userProfileInfo.get()`), Your Apps 5-col x 2-row grid +
+  View All → gallery, Explore published grid + View All → explore,
+  prompt bar → create screen with prompt prefilled.
+- Screens: `GalleryScreen` (list, open, delete-confirm),
+  `ExploreScreen` (published grid), `ProfileScreen` (identity, settings
+  stub, sign out), `CreateScreen` (prompt + `StarterTemplates`
+  counter/habit/notes → `createApp`), `RunnerScreen` (renders saved
+  `uiDefinition` via `UiRenderer`). Shared `AppTile` + `SectionHeader`.
+- `GalleryService` extended: listPublished/getApp/updateApp.
+- `main.dart` home now `_Boot` → `AuthGate` → `AppShell`.
+- `analyze` clean (lib + test). No server changes this round.
+- Step 1 user flow (auth + theme + asset prep), all `analyze` clean,
+  `dart test` passes (greeting integration).
+- Auth: Serverpod email IDP has NO passwordless magic-link (password
+  login + emailed codes for register/reset only, `finishRegistration`
+  requires password). Used user's stated fallback: custom 4-digit OTP.
+  - `ripple_server/lib/src/auth/`: `otp_challenge.spy.yaml` (table
+    `otp_challenges`: email, SHA-256 codeHash, 10-min expiresAt,
+    attempts, consumed), `otp_auth_reason.spy.yaml` (enum),
+    `otp_auth_exception.spy.yaml` (typed client errors),
+    `otp_auth_endpoint.dart` (`OtpAuthEndpoint.requestCode/verifyCode`).
+  - Verify mints a REAL session: find-or-create auth user + profile via
+    `AuthServices`, then `tokenManager.issueToken(method: 'otp')`.
+    Client stores it with `client.auth.updateSignedInUser` — standard
+    `isAuthenticated`/`authInfoListenable` work.
+  - Code delivery = server log for now (same as Serverpod dev behavior);
+    real sender plugs into `_deliverCode` (marked TODO). Max 5 attempts,
+    old codes invalidated on re-request, codes never stored plain.
+  - Migration `migrations/20261014202717080` created, NOT applied.
+- Theme (`ripple_flutter/lib/theme/ripple_theme.dart`): lime `#D3FB52`
+  primary, olive `#052326` ink/accent, neutral scale, Oswald display +
+  Roboto body via google_fonts, Material icons. Light + dark schemes.
+- Flutter auth UI (`features/auth/`): `OtpScreen` (email → code steps,
+  typed error messages), `AuthGate` (gates on `authInfoListenable`),
+  `SplashScreen` (olive, shows `assets/images/splash.png` or lime-drop
+  fallback). `main.dart` home: splash (1.2s) → gate → placeholder.
+  `services/auth_service.dart` wraps `client.otpAuth`.
+- Assets: `ripple_flutter/assets/images/` + pubspec entry + `.gitkeep`;
+  `flutter_launcher_icons` dev dep configured
+  (`image_path: assets/images/icon.png`). WAITING on user to drop
+  `splash.png`/`icon.png` into root `assets/` (dir does not exist yet).
 - Confirmed scaffold from `serverpod create ripple`: `ripple_server/`,
   `ripple_client/` (generated, untouched), `ripple_flutter/`. Auth
   (email IDP + JWT) already wired in `ripple_server/lib/server.dart`.
@@ -35,6 +84,16 @@ Personal apps only — no realtime/chat/multiplayer. See `PROJECT.md`.
   server in this session.
 
 ## Key decisions
+- Passwordless = custom OTP, not Serverpod magic-link (does not exist
+  in email IDP). Revisit only if Serverpod adds it; OTP UI already
+  matches "email link or code" UX closely enough for hackathon.
+- `client.auth` getter comes from `serverpod_auth_idp_flutter` re-export
+  of core_flutter — import that package (declared dep) wherever auth
+  state is touched, not `ripple_client` alone.
+- Generated client methods use positional params (`verifyCode(email,
+  code)`); server defaults (e.g. `validDays`) don't transfer.
+- Theme tokens live in `RippleColors`/`RippleTheme`; generated apps keep
+  inline styles via UiRenderer (host chrome vs app content split).
 - `appId` stored as plain `int`, NO FK relations: keeps MVP migration
   trivial; referential integrity enforced in endpoint code.
 - `ownerUserId: UuidValue?` nullable, auth optional (`requireLogin=false`):
@@ -53,7 +112,11 @@ Personal apps only — no realtime/chat/multiplayer. See `PROJECT.md`.
 
 ## Exact next steps (for next agent)
 1. Ask user to run `serverpod start`, then verify via MCP
-   `tail_server_logs` that migration `20261014135210853` applied.
+   `tail_server_logs` that migrations `...5210853` + `...2017080` applied.
+2. End-to-end test with running server: OTP sign-in (code in server
+   log) → create app from prompt → open from grid → check persistence.
+3. Runner data step: wire UiRenderer actions to `AppDataService`
+   (load values on open, persist writes). Then gen-UI flow (step 3).
 2. Build gallery screen (`features/gallery/gallery_screen.dart`) using
    `GalleryService`; wire home navigation in `main.dart`.
 3. Build builder screen: prompt → template JSON → `createApp`.
