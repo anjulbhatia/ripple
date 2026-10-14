@@ -24,6 +24,10 @@ Personal apps only — no realtime/chat/multiplayer. See `PROJECT.md`.
   skips them). Android/iOS launcher icons were fine all along.
 - Mid-write codegen hazard: watch-mode codegen can fail on partially
   written files (stale barrels) — rerun `serverpod generate` to heal.
+- Watch-mode codegen race: saving server files can leave generated
+  barrels missing the newest models (stale analyzer snapshot). Heal
+  with CLI `serverpod generate` + verify barrel contents; stable when
+  untouched. Always re-verify after server edits while watcher runs.
 - `dart test` cannot run while server holds the embedded DB (expected).
 - Runner persists values: `UiRenderer` takes loadValues/saveValue;
   `RunnerScreen` wires `AppDataService` (bool/num/string codec).
