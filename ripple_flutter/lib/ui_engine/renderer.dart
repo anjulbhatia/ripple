@@ -62,6 +62,30 @@ class _UiRendererState extends State<UiRenderer> {
     return _buildNode(context, root);
   }
 
+  Color? _parseColor(Object? name) => switch (name) {
+    'lime' => const Color(0xFFD3FB52),
+    'olive' => const Color(0xFF052326),
+    'white' => Colors.white,
+    'black' => Colors.black87,
+    'grey' || 'gray' => Colors.grey,
+    'red' => Colors.red,
+    'blue' => Colors.blue,
+    'green' => Colors.green,
+    _ => null,
+  };
+
+  TextStyle _textStyle(Map<String, Object?> node) {
+    final style = (node[UiNodeKeys.style] as Map?)?.cast<String, Object?>();
+    final fontSize = (style?['fontSize'] as num?)?.toDouble();
+    final bold = (style?['fontWeight'] as String?) == 'bold';
+    final color = _parseColor(style?['color']);
+    return TextStyle(
+      fontSize: fontSize,
+      fontWeight: bold ? FontWeight.w700 : null,
+      color: color,
+    );
+  }
+
   Widget _buildNode(BuildContext context, Map<String, Object?> node) {
     final type = node[UiNodeKeys.type] as String?;
     if (type == null || !ComponentCatalog.isSupported(type)) {
@@ -87,12 +111,21 @@ class _UiRendererState extends State<UiRenderer> {
       case 'Text':
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Text('${node[UiNodeKeys.text] ?? ''}'),
+          child: Text(
+            '${node[UiNodeKeys.text] ?? ''}',
+            style: _textStyle(node),
+          ),
         );
       case 'Button':
+        final buttonStyle = (node[UiNodeKeys.style] as Map?)
+            ?.cast<String, Object?>();
+        final bg = _parseColor(buttonStyle?['background']);
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: ElevatedButton(
+            style: bg == null
+                ? null
+                : ElevatedButton.styleFrom(backgroundColor: bg),
             onPressed: () => _handleAction(
               (node[UiNodeKeys.onClick] as Map?)?.cast<String, Object?>(),
             ),
