@@ -30,14 +30,9 @@ class AppEndpoint extends Endpoint {
   }
 
   Future<List<AppDefinition>> listMyApps(Session session) async {
+    // Gallery is personal: anonymous callers see nothing.
     final ownerId = _ownerId(session);
-    if (ownerId == null) {
-      return AppDefinition.db.find(
-        session,
-        orderByList: (t) => [t.updatedAt.desc()],
-        limit: 100,
-      );
-    }
+    if (ownerId == null) return [];
     return AppDefinition.db.find(
       session,
       where: (t) => t.ownerUserId.equals(ownerId),
@@ -73,6 +68,15 @@ class AppEndpoint extends Endpoint {
   }
 
   Future<void> deleteApp(Session session, int appId) async {
+    // Cascade manually (no FK relations by design): data + links first.
+    await AppData.db.deleteWhere(
+      session,
+      where: (t) => t.appId.equals(appId),
+    );
+    await MagicLink.db.deleteWhere(
+      session,
+      where: (t) => t.appId.equals(appId),
+    );
     await AppDefinition.db.deleteWhere(
       session,
       where: (t) => t.id.equals(appId),

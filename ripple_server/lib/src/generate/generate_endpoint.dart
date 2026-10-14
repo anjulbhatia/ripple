@@ -58,8 +58,9 @@ class GenerateEndpoint extends Endpoint {
         );
         return CatalogContract.validate(_decode(retry.text));
       }
+    } on GenerateException {
+      rethrow;
     } catch (e) {
-      if (e is GenerateException) rethrow;
       session.log('Genkit generateUi failed: $e');
       throw GenerateException(
         message: 'AI generation failed. Try again or use a starter.',

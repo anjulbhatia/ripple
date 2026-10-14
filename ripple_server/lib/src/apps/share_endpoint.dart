@@ -17,6 +17,12 @@ class ShareEndpoint extends Endpoint {
     if (app == null) {
       throw StateError('App $appId not found');
     }
+    // Only the owner may share their app.
+    final caller = _ownerId(session);
+    if (app.ownerUserId != null && app.ownerUserId != caller) {
+      throw StateError('Only the app owner can share it');
+    }
+    final days = validDays.clamp(1, 365);
     final token = const Uuid().v4().replaceAll('-', '');
     final now = DateTime.now().toUtc();
     return MagicLink.db.insertRow(
@@ -24,8 +30,8 @@ class ShareEndpoint extends Endpoint {
       MagicLink(
         token: token,
         appId: appId,
-        createdByUserId: _ownerId(session),
-        expiresAt: now.add(Duration(days: validDays)),
+        createdByUserId: caller,
+        expiresAt: now.add(Duration(days: days)),
         createdAt: now,
       ),
     );
