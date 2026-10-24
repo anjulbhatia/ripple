@@ -1,6 +1,0 @@
-# Machine-readable reason for a UI generation failure.
-enum: GenerateReason
-values:
-  - notConfigured
-  - invalidPrompt
-  - generationFailed

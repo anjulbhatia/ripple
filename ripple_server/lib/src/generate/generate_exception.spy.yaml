@@ -1,5 +1,0 @@
-# Typed generation failure sent to the client (thrown, never persisted).
-exception: GenerateException
-fields:
-  message: String
-  reason: GenerateReason
